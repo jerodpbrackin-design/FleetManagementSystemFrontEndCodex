@@ -27,4 +27,3 @@ function DriverList({ drivers, deleteDriver }) {
 }
 
 export default DriverList
-//latest
