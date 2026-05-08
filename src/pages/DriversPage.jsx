@@ -1,49 +1,115 @@
 import { useEffect, useState } from "react";
-import DriverForm from "../components/DriverForm";
-import DriversList from "../components/DriversList";
+import api from "../api/api";
 
 function DriversPage() {
   const [drivers, setDrivers] = useState([]);
+  const [name, setName] = useState("");
+  const [licenseType, setLicenseType] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
-  const API_URL = "https://jerod.pathway4.click/drivers";
-
-  async function fetchDrivers() {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    setDrivers(data);
-  }
+  const fetchDrivers = async () => {
+    try {
+      const response = await api.get("/drivers");
+      setDrivers(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+    }
+  };
 
   useEffect(() => {
     fetchDrivers();
   }, []);
 
-  async function addDriver(driver) {
-    await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(driver),
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    fetchDrivers();
-  }
+    const driverData = {
+      name,
+      license_type: licenseType,
+    };
 
-  async function deleteDriver(id) {
-    await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      if (editingId) {
+        await api.put(`/drivers/${editingId}`, driverData);
+      } else {
+        await api.post("/drivers", driverData);
+      }
 
-    fetchDrivers();
-  }
+      setName("");
+      setLicenseType("");
+      setEditingId(null);
+
+      fetchDrivers();
+    } catch (error) {
+      console.error("Error saving driver:", error);
+    }
+  };
+
+  const handleEdit = (driver) => {
+    setEditingId(driver[0]);
+    setName(driver[1] || "");
+    setLicenseType(driver[2] || "");
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/drivers/${id}`);
+      fetchDrivers();
+    } catch (error) {
+      console.error("Error deleting driver:", error);
+    }
+  };
 
   return (
     <div>
-      <h2>Drivers</h2>
+      <h2>Driver Management</h2>
 
-      <DriverForm addDriver={addDriver} />
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Driver Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
 
-      <DriversList drivers={drivers} deleteDriver={deleteDriver} />
+        <input
+          type="text"
+          placeholder="License Type"
+          value={licenseType}
+          onChange={(e) => setLicenseType(e.target.value)}
+          required
+        />
+
+        <button type="submit">
+          {editingId ? "Update Driver" : "Add Driver"}
+        </button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>License Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {drivers.map((driver, index) => (
+            <tr key={index}>
+              <td>{driver[1]}</td>
+              <td>{driver[2]}</td>
+              <td>
+                <button onClick={() => handleEdit(driver)}>Edit</button>
+
+                <button onClick={() => handleDelete(driver[0])}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
