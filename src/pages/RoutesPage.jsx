@@ -3,15 +3,30 @@ import api from "../api/api";
 
 function RoutesPage() {
   const [routes, setRoutes] = useState([]);
+  const [packages, setPackages] = useState([]);
+
   const [date, setDate] = useState("");
   const [serviceZone, setServiceZone] = useState("");
   const [driverId, setDriverId] = useState("");
+
   const [editingId, setEditingId] = useState(null);
+  const [selectedRoute, setSelectedRoute] = useState(null);
 
   const fetchRoutes = async () => {
     try {
       const response = await api.get("/routes");
+      console.log(response.data);
       setRoutes(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchPackages = async () => {
+    try {
+      const response = await api.get("/packages");
+      console.log(response.data);
+      setPackages(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -19,6 +34,7 @@ function RoutesPage() {
 
   useEffect(() => {
     fetchRoutes();
+    fetchPackages();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -55,6 +71,8 @@ function RoutesPage() {
 
   const handleEdit = (route) => {
     setEditingId(route[0]);
+
+    // Adjust indexes here if backend order changed
     setDate(route[1] || "");
     setServiceZone(route[2] || "");
     setDriverId(route[3] || "");
@@ -98,7 +116,7 @@ function RoutesPage() {
         </button>
       </form>
 
-      <table>
+      <table border="1">
         <thead>
           <tr>
             <th>Date</th>
@@ -109,8 +127,9 @@ function RoutesPage() {
         </thead>
 
         <tbody>
-          {routes.map((route, index) => (
-            <tr key={index}>
+          {routes.map((route) => (
+            <tr key={route[0]}>
+              {/* Update indexes if backend changed */}
               <td>{route[1]}</td>
               <td>{route[2]}</td>
               <td>{route[3]}</td>
@@ -123,11 +142,38 @@ function RoutesPage() {
                 <button onClick={() => handleDelete(route[0])}>
                   Delete
                 </button>
+
+                <button onClick={() => setSelectedRoute(route[0])}>
+                  View Packages
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {selectedRoute && (
+        <div>
+          <h3>Packages for Route #{selectedRoute}</h3>
+
+          {packages.filter((pkg) => Number(pkg[3]) === Number(selectedRoute))
+            .length === 0 ? (
+            <p>No packages assigned.</p>
+          ) : (
+            <ul>
+              {packages
+                .filter(
+                  (pkg) => Number(pkg[3]) === Number(selectedRoute)
+                )
+                .map((pkg) => (
+                  <li key={pkg[0]}>
+                    {pkg[1]} - {pkg[2]}kg
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

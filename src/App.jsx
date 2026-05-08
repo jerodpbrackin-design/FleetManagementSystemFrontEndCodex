@@ -3,6 +3,7 @@ import DriversPage from "./pages/DriversPage";
 import VehiclesPage from "./pages/VehiclesPage";
 import RoutesPage from "./pages/RoutesPage";
 import PackagesPage from "./pages/PackagesPage";
+import './App.css'
 
 function App() {
   return (

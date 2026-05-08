@@ -98,6 +98,7 @@ function PackagesPage() {
         <input
           type="number"
           placeholder="Weight"
+          min="1"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           required
